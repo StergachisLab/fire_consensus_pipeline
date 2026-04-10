@@ -1,0 +1,44 @@
+# fire_consensus_pipeline
+
+Build consensus peaks from per-sample `*peaks.bed.gz` files, then recalculate per-sample actuation values from `*pileup.bed.gz` files against those consensus intervals.
+
+The pipeline supports three execution backends for the per-sample recalculation step:
+
+- `local`
+- `slurm`
+- `pbs`
+
+It uses a manifest file so sample names and file paths are explicit rather than inferred from filenames.
+
+---
+
+## What it does
+
+The workflow has three main steps:
+
+1. **Reduce per-sample peak files**
+   - reads each sample's `peaks.bed.gz`
+   - creates a temporary simplified representation used to build the pooled consensus
+
+2. **Build consensus peaks**
+   - merges reduced peak information across samples
+   - runs `ft mock-fire`
+   - runs `ft call-peaks`
+   - writes:
+     - `consensus.intervals.bed`
+     - `consensus_peak_ids.tsv`
+
+3. **Recalculate per-sample actuation on consensus intervals**
+   - intersects each sample's pileup file with the consensus peaks
+   - ranks overlapping rows
+   - keeps the best row per consensus peak
+   - writes one final output per sample
+
+---
+
+## Final outputs
+
+Per-sample final files are written to:
+
+```text
+samples_recalc_actuation/<sample>.actuation.tsv
