@@ -8,37 +8,6 @@ The pipeline supports three execution backends for the per-sample recalculation 
 - slurm
 - pbs
 
-It uses a manifest file so sample names and file paths are explicit rather than inferred from filenames.
-
-The workflow has three main steps:
-
-1. **Reduce per-sample peak files**
-   - reads each sample's `peaks.bed.gz`
-   - creates a temporary simplified representation used to build the pooled consensus
-
-2. **Build consensus peaks**
-   - merges reduced peak information across samples
-   - runs `ft mock-fire`
-   - runs `ft call-peaks`
-   - writes:
-     - `consensus.intervals.bed`
-     - `consensus_peak_ids.tsv`
-
-3. **Recalculate per-sample actuation on consensus intervals**
-   - intersects each sample's pileup file with the consensus peaks
-   - ranks overlapping rows
-   - keeps the best row per consensus peak
-   - writes one final output per sample
-
----
-
-## Final outputs
-
-Per-sample final files are written to:
-
-```text
-samples_recalc_actuation/<sample>.actuation.tsv
-
 
 ## Running
 
@@ -89,3 +58,51 @@ samples_recalc_actuation/<sample>.actuation.tsv
   --mem 32gb \
   --time 08:00:00 \
   --outdir results
+
+
+It uses a manifest file so sample names and file paths are explicit rather than inferred from filenames.
+
+The workflow has three main steps:
+
+1. **Reduce per-sample peak files**
+   - reads each sample's `peaks.bed.gz`
+   - creates a temporary simplified representation used to build the pooled consensus
+
+2. **Build consensus peaks**
+   - merges reduced peak information across samples
+   - runs `ft mock-fire`
+   - runs `ft call-peaks`
+   - writes:
+     - `consensus.intervals.bed`
+     - `consensus_peak_ids.tsv`
+
+3. **Recalculate per-sample actuation on consensus intervals**
+   - intersects each sample's pileup file with the consensus peaks
+   - ranks overlapping rows
+   - keeps the best row per consensus peak
+   - writes one final output per sample
+
+---
+
+## Final outputs
+
+Per-sample final files are written to:
+
+```text
+samples_recalc_actuation/<sample>.actuation.tsv
+
+Output structure:
+
+results/
+├── consensus.intervals.bed
+├── consensus_peak_ids.tsv
+├── merged.4col.bed.gz
+├── output.mock_bam
+├── output.mock_bam.bai
+├── output.peaks
+├── logs/
+├── sample2consensus.sh
+├── samples_recalc_actuation/
+│   ├── SAMPLE_A.actuation.tsv
+│   └── SAMPLE_B.actuation.tsv
+└── tmp_consensus_inputs/
