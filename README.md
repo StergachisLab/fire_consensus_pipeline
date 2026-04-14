@@ -6,9 +6,10 @@
 
 Build consensus peaks from per-sample `*peaks.bed.gz` files, then recalculate per-sample actuation values from `*pileup.bed.gz` files against those consensus intervals.
 
-It uses the fiberseq/fibertools-rs:
+Pull the `peak_calling` branch of the fiberseq/fibertools-rs tool for this workflow:
 ```
 git clone --branch peak_calling --single-branch https://github.com/fiberseq/fibertools-rs.git
+git switch peak_calling
 ```
 
 It uses a manifest input file with 3 columns, so sample names and file paths are explicit.
