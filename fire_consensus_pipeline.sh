@@ -164,28 +164,29 @@ EOF
 }
 
 log() {
-  echo "[$(date '+%F %T')] $*" >&2
+    echo "[$(date '+%F %T')] $*" >&2
 }
 
 die() {
-  echo "ERROR: $*" >&2
-  exit 1
+    echo "ERROR: $*" >&2
+    exit 1
 }
 
 run_cmd() {
-  if [[ "${DRY_RUN}" == "1" ]]; then
-    echo "[DRY-RUN] $*"
-  else
-    eval "$@"
-  fi
+    if [[ "${DRY_RUN}" == "1" ]]; then
+        printf '[DRY-RUN] %q ' "$@"
+        printf '\n'
+    else
+        "$@"
+    fi
 }
 
 require_cmd() {
-  command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1"
+    command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1"
 }
 
 abs_path() {
-  local p="$1"
+    local p="$1"
   python3 - <<'PY' "$p"
 import os, sys
 print(os.path.abspath(sys.argv[1]))
@@ -193,9 +194,9 @@ PY
 }
 
 validate_manifest() {
-  local manifest="$1"
-
-  awk 'BEGIN{FS=OFS="\t"}
+    local manifest="$1"
+    
+    awk 'BEGIN{FS=OFS="\t"}
     NR==1 {
       if ($1 != "sample" || $2 != "peaks" || $3 != "pileup") {
         print "Manifest header must be: sample<TAB>peaks<TAB>pileup" > "/dev/stderr"
@@ -211,19 +212,19 @@ validate_manifest() {
       print "Invalid manifest line " NR ": sample, peaks, and pileup must all be non-empty" > "/dev/stderr"
       exit 1
     }
-  ' "$manifest"
-
-  while IFS=$'\t' read -r sample peaks pileup _rest; do
-    [[ "$sample" == "sample" ]] && continue
-    [[ -n "$sample" ]] || die "Empty sample in manifest"
-    [[ -f "$peaks" ]] || die "Peaks file not found for sample $sample: $peaks"
-    [[ -f "$pileup" ]] || die "Pileup file not found for sample $sample: $pileup"
-  done < "$manifest"
+    ' "$manifest"
+    
+    while IFS=$'\t' read -r sample peaks pileup _rest; do
+        [[ "$sample" == "sample" ]] && continue
+        [[ -n "$sample" ]] || die "Empty sample in manifest"
+        [[ -f "$peaks" ]] || die "Peaks file not found for sample $sample: $peaks"
+        [[ -f "$pileup" ]] || die "Pileup file not found for sample $sample: $pileup"
+    done < "$manifest"
 }
 
 write_sample2consensus_script() {
-  local script_path="$1"
-
+    local script_path="$1"
+    
   cat > "$script_path" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -317,157 +318,166 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   sample_to_consensus_bedtools "$1" "$2" "$3" "$4"
 fi
 EOF
-
-  chmod +x "$script_path"
+    
+    chmod +x "$script_path"
 }
 
 load_scheduler_config() {
-  if [[ -f "$SCHEDULER_CONFIG" ]]; then
-    # shellcheck disable=SC1090
-    source "$SCHEDULER_CONFIG"
-  fi
-
-  LOCAL_JOBS="${LOCAL_JOBS:-$JOBS}"
-
-  SLURM_ACCOUNT="${CLI_ACCOUNT:-${SLURM_ACCOUNT:-}}"
-  SLURM_PARTITION="${CLI_PARTITION:-${SLURM_PARTITION:-}}"
-  SLURM_CPUS_PER_TASK="${CLI_CPUS:-${SLURM_CPUS_PER_TASK:-2}}"
-  SLURM_MEM="${CLI_MEM:-${SLURM_MEM:-20G}}"
-  SLURM_TIME="${CLI_TIME:-${SLURM_TIME:-12:00:00}}"
-  SLURM_EXTRA_ARGS="${SLURM_EXTRA_ARGS:-}"
-
-  PBS_ACCOUNT="${CLI_ACCOUNT:-${PBS_ACCOUNT:-}}"
-  PBS_QUEUE="${CLI_QUEUE:-${PBS_QUEUE:-}}"
-  PBS_NCPUS="${CLI_CPUS:-${PBS_NCPUS:-2}}"
-  PBS_MEM="${CLI_MEM:-${PBS_MEM:-20gb}}"
-  PBS_WALLTIME="${CLI_TIME:-${PBS_WALLTIME:-12:00:00}}"
-  PBS_EXTRA_ARGS="${PBS_EXTRA_ARGS:-}"
+    if [[ -f "$SCHEDULER_CONFIG" ]]; then
+        # shellcheck disable=SC1090
+        source "$SCHEDULER_CONFIG"
+    fi
+    
+    LOCAL_JOBS="${LOCAL_JOBS:-$JOBS}"
+    
+    SLURM_ACCOUNT="${CLI_ACCOUNT:-${SLURM_ACCOUNT:-}}"
+    SLURM_PARTITION="${CLI_PARTITION:-${SLURM_PARTITION:-}}"
+    SLURM_CPUS_PER_TASK="${CLI_CPUS:-${SLURM_CPUS_PER_TASK:-2}}"
+    SLURM_MEM="${CLI_MEM:-${SLURM_MEM:-20G}}"
+    SLURM_TIME="${CLI_TIME:-${SLURM_TIME:-12:00:00}}"
+    SLURM_EXTRA_ARGS="${SLURM_EXTRA_ARGS:-}"
+    
+    PBS_ACCOUNT="${CLI_ACCOUNT:-${PBS_ACCOUNT:-}}"
+    PBS_QUEUE="${CLI_QUEUE:-${PBS_QUEUE:-}}"
+    PBS_NCPUS="${CLI_CPUS:-${PBS_NCPUS:-2}}"
+    PBS_MEM="${CLI_MEM:-${PBS_MEM:-20gb}}"
+    PBS_WALLTIME="${CLI_TIME:-${PBS_WALLTIME:-12:00:00}}"
+    PBS_EXTRA_ARGS="${PBS_EXTRA_ARGS:-}"
 }
 
 validate_runner_settings() {
-  load_scheduler_config
-
-  case "$RUNNER" in
-    local)
-      ;;
-    slurm)
-      require_cmd sbatch
-      [[ -n "${SLURM_ACCOUNT}" ]] || die "SLURM_ACCOUNT not set. Use --account or provide it in $SCHEDULER_CONFIG"
-      [[ -n "${SLURM_PARTITION}" ]] || die "SLURM_PARTITION not set. Use --partition or provide it in $SCHEDULER_CONFIG"
-      ;;
-    pbs)
-      require_cmd qsub
-      [[ -n "${PBS_QUEUE}" ]] || die "PBS_QUEUE not set. Use --queue or provide it in $SCHEDULER_CONFIG"
-      ;;
-    *)
-      die "Unsupported runner: $RUNNER"
-      ;;
-  esac
+    load_scheduler_config
+    
+    case "$RUNNER" in
+        local)
+        ;;
+        slurm)
+            require_cmd sbatch
+            [[ -n "${SLURM_ACCOUNT}" ]] || die "SLURM_ACCOUNT not set. Use --account or provide it in $SCHEDULER_CONFIG"
+            [[ -n "${SLURM_PARTITION}" ]] || die "SLURM_PARTITION not set. Use --partition or provide it in $SCHEDULER_CONFIG"
+        ;;
+        pbs)
+            require_cmd qsub
+            [[ -n "${PBS_QUEUE}" ]] || die "PBS_QUEUE not set. Use --queue or provide it in $SCHEDULER_CONFIG"
+        ;;
+        *)
+            die "Unsupported runner: $RUNNER"
+        ;;
+    esac
 }
 
 reduce_peaks_stage() {
-  mkdir -p "$REDUCED_DIR"
-
-  log "Reducing per-sample peak files into temporary TSV parts"
-
-  if [[ "$DRY_RUN" == "1" ]]; then
-    awk 'BEGIN{FS=OFS="\t"} NR>1 {print "[DRY-RUN] would process sample=" $1 " peaks=" $2}' "$MANIFEST"
-    return
-  fi
-
-  local manifest_pairs
-  manifest_pairs=$(mktemp)
-
-  awk 'BEGIN{FS=OFS="\t"} NR>1 {print $1 "\t" $2}' "$MANIFEST" > "$manifest_pairs"
-
-  while IFS=$'\t' read -r sample peaks; do
-    (
-      out="$REDUCED_DIR/${sample}.peaks.reduced.tsv"
-      gzip -cd -- "$peaks" \
-        | awk -v s="$sample" 'BEGIN{OFS="\t"} !/^#/ && NF>=6 {print $1,$2,$3,$6,s}' \
-        > "$out"
-    ) &
-    while [[ "$(jobs -r | wc -l)" -ge "$JOBS" ]]; do
-      wait -n
-    done
-  done < "$manifest_pairs"
-
-  wait
-  rm -f "$manifest_pairs"
+    mkdir -p "$REDUCED_DIR"
+    
+    log "Reducing per-sample peak files into temporary TSV parts"
+    
+    if [[ "$DRY_RUN" == "1" ]]; then
+        awk 'BEGIN{FS=OFS="\t"} NR>1 {print "[DRY-RUN] would process sample=" $1 " peaks=" $2}' "$MANIFEST"
+        return
+    fi
+    
+    local manifest_pairs
+    manifest_pairs=$(mktemp)
+    
+    awk 'BEGIN{FS=OFS="\t"} NR>1 {print $1 "\t" $2}' "$MANIFEST" > "$manifest_pairs"
+    
+    while IFS=$'\t' read -r sample peaks; do
+        (
+            out="$REDUCED_DIR/${sample}.peaks.reduced.tsv"
+            gzip -cd -- "$peaks" \
+            | awk -v s="$sample" 'BEGIN{OFS="\t"} !/^#/ && NF>=6 {print $1,$2,$3,$6,s}' \
+            > "$out"
+        ) &
+        while [[ "$(jobs -r | wc -l)" -ge "$JOBS" ]]; do
+            wait -n
+        done
+    done < "$manifest_pairs"
+    
+    wait
+    rm -f "$manifest_pairs"
 }
 
 consensus_stage() {
-  shopt -s nullglob
-  local reduced_files=( "$REDUCED_DIR"/*.peaks.reduced.tsv )
-  shopt -u nullglob
-
-  [[ ${#reduced_files[@]} -gt 0 ]] || die "No temporary reduced peak TSVs found in $REDUCED_DIR"
-  [[ -x "$FT_PATH" ]] || die "ft executable not found or not executable: $FT_PATH"
-
-  require_cmd bgzip
-  require_cmd samtools
-
-  log "Building merged 4-column BED"
-  if [[ "$DRY_RUN" == "1" ]]; then
-    echo "[DRY-RUN] cat $REDUCED_DIR/*.peaks.reduced.tsv | awk ... | bgzip -@ $JOBS > $MERGED_BED_GZ"
-  else
-    cat "$REDUCED_DIR"/*.peaks.reduced.tsv \
-      | awk 'BEGIN{OFS="\t"} {print $1,$2,$3,$4"_"$1}' \
-      | bgzip -@ "$JOBS" > "$MERGED_BED_GZ"
-  fi
-
-  log "Running ft mock-fire and call-peaks"
-  run_cmd "\"$FT_PATH\" mock-fire \"$MERGED_BED_GZ\" | samtools sort -o \"$MOCK_BAM\" --write-index"
-  run_cmd "\"$FT_PATH\" call-peaks \"$MOCK_BAM\" --min-fire-coverage 1 --min-fire-frac 0.01 > \"$OUTPUT_PEAKS\""
-
-  log "Creating consensus BED and peak ID list"
-  if [[ "$DRY_RUN" == "1" ]]; then
-    echo "[DRY-RUN] awk to create $CONSENSUS_BED and $CONSENSUS_PEAK_IDS"
-  else
-    awk 'BEGIN{OFS="\t"}
+    shopt -s nullglob
+    local reduced_files=( "$REDUCED_DIR"/*.peaks.reduced.tsv )
+    shopt -u nullglob
+    
+    [[ ${#reduced_files[@]} -gt 0 ]] || die "No temporary reduced peak TSVs found in $REDUCED_DIR"
+    [[ -x "$FT_PATH" ]] || die "ft executable not found or not executable: $FT_PATH"
+    
+    require_cmd bgzip
+    require_cmd samtools
+    
+    log "Building merged 4-column BED"
+    if [[ "$DRY_RUN" == "1" ]]; then
+        echo "[DRY-RUN] cat $REDUCED_DIR/*.peaks.reduced.tsv | awk ... | bgzip -@ $JOBS > $MERGED_BED_GZ"
+    else
+        cat "$REDUCED_DIR"/*.peaks.reduced.tsv \
+        | awk 'BEGIN{OFS="\t"} {print $1,$2,$3,$4"_"$1}' \
+        | bgzip -@ "$JOBS" > "$MERGED_BED_GZ"
+    fi
+    
+    log "Running ft mock-fire and call-peaks"
+    if [[ "$DRY_RUN" == "1" ]]; then
+        echo "[DRY-RUN] $FT_PATH mock-fire $MERGED_BED_GZ | samtools sort -o $MOCK_BAM --write-index"
+    else
+        "$FT_PATH" mock-fire "$MERGED_BED_GZ" | samtools sort -o "$MOCK_BAM" --write-index
+    fi
+    
+    if [[ "$DRY_RUN" == "1" ]]; then
+        echo "[DRY-RUN] $FT_PATH call-peaks $MOCK_BAM --min-fire-coverage 1 --min-fire-frac 0.01 > $OUTPUT_PEAKS"
+    else
+        "$FT_PATH" call-peaks "$MOCK_BAM" --min-fire-coverage 1 --min-fire-frac 0.01 > "$OUTPUT_PEAKS"
+    fi
+    
+    log "Creating consensus BED and peak ID list"
+    if [[ "$DRY_RUN" == "1" ]]; then
+        echo "[DRY-RUN] awk to create $CONSENSUS_BED and $CONSENSUS_PEAK_IDS"
+    else
+        awk 'BEGIN{OFS="\t"}
       NR==1 {next}
       {
         peak_id = $1 "_" $2 "_" $3
         print $1, $2, $3, peak_id
-      }' "$OUTPUT_PEAKS" > "$CONSENSUS_BED"
-
-    awk 'BEGIN{OFS="\t"} NR>1 {print $1"_"$2"_"$3}' "$OUTPUT_PEAKS" > "$CONSENSUS_PEAK_IDS"
-  fi
-
-  if [[ "$KEEP_TEMP" != "1" ]]; then
-    rm -rf "$REDUCED_DIR"
-  fi
+        }' "$OUTPUT_PEAKS" > "$CONSENSUS_BED"
+        
+        awk 'BEGIN{OFS="\t"} NR>1 {print $1"_"$2"_"$3}' "$OUTPUT_PEAKS" > "$CONSENSUS_PEAK_IDS"
+    fi
+    
+    if [[ "$KEEP_TEMP" != "1" ]]; then
+        rm -rf "$REDUCED_DIR"
+    fi
 }
 
 submit_local_job() {
-  local pileup="$1"
-  local sample="$2"
-  local out="$3"
-
-  if [[ "$DRY_RUN" == "1" ]]; then
-    echo "[DRY-RUN] local: $SAMPLE2CONS_SCRIPT $pileup $sample $CONSENSUS_BED $out"
-    return
-  fi
-
-  "$SAMPLE2CONS_SCRIPT" "$pileup" "$sample" "$CONSENSUS_BED" "$out" \
+    local pileup="$1"
+    local sample="$2"
+    local out="$3"
+    
+    if [[ "$DRY_RUN" == "1" ]]; then
+        echo "[DRY-RUN] local: $SAMPLE2CONS_SCRIPT $pileup $sample $CONSENSUS_BED $out"
+        return
+    fi
+    
+    "$SAMPLE2CONS_SCRIPT" "$pileup" "$sample" "$CONSENSUS_BED" "$out" \
     > "$LOGS_DIR/${sample}.local.out" \
     2> "$LOGS_DIR/${sample}.local.err"
 }
 
 submit_slurm_job() {
-  local pileup="$1"
-  local sample="$2"
-  local out="$3"
-  local cmd
-
-  cmd=$(printf '%q ' \
-    "$SAMPLE2CONS_SCRIPT" \
-    "$pileup" \
-    "$sample" \
-    "$CONSENSUS_BED" \
+    local pileup="$1"
+    local sample="$2"
+    local out="$3"
+    local cmd
+    
+    cmd=$(printf '%q ' \
+        "$SAMPLE2CONS_SCRIPT" \
+        "$pileup" \
+        "$sample" \
+        "$CONSENSUS_BED" \
     "$out")
-
-  if [[ "$DRY_RUN" == "1" ]]; then
+    
+    if [[ "$DRY_RUN" == "1" ]]; then
     cat <<EOF
 [DRY-RUN] sbatch \
   --job-name=fire_${sample} \
@@ -481,39 +491,39 @@ submit_slurm_job() {
   ${SLURM_EXTRA_ARGS} \
   --wrap "$cmd"
 EOF
-  else
-    # shellcheck disable=SC2086
-    sbatch \
-      --job-name="fire_${sample}" \
-      --account="${SLURM_ACCOUNT}" \
-      --partition="${SLURM_PARTITION}" \
-      --output="${LOGS_DIR}/${sample}.%j.out" \
-      --error="${LOGS_DIR}/${sample}.%j.err" \
-      --cpus-per-task="${SLURM_CPUS_PER_TASK}" \
-      --mem="${SLURM_MEM}" \
-      --time="${SLURM_TIME}" \
-      ${SLURM_EXTRA_ARGS} \
-      --wrap "$cmd"
-  fi
+    else
+        # shellcheck disable=SC2086
+        sbatch \
+        --job-name="fire_${sample}" \
+        --account="${SLURM_ACCOUNT}" \
+        --partition="${SLURM_PARTITION}" \
+        --output="${LOGS_DIR}/${sample}.%j.out" \
+        --error="${LOGS_DIR}/${sample}.%j.err" \
+        --cpus-per-task="${SLURM_CPUS_PER_TASK}" \
+        --mem="${SLURM_MEM}" \
+        --time="${SLURM_TIME}" \
+        ${SLURM_EXTRA_ARGS} \
+        --wrap "$cmd"
+    fi
 }
 
 submit_pbs_job() {
-  local pileup="$1"
-  local sample="$2"
-  local out="$3"
-  local job_script
-
-  job_script="$OUTDIR/pbs_job_${sample}.sh"
-
+    local pileup="$1"
+    local sample="$2"
+    local out="$3"
+    local job_script
+    
+    job_script="$OUTDIR/pbs_job_${sample}.sh"
+    
   cat > "$job_script" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 cd $(printf '%q' "$PWD")
 $(printf '%q ' "$SAMPLE2CONS_SCRIPT" "$pileup" "$sample" "$CONSENSUS_BED" "$out")
 EOF
-  chmod +x "$job_script"
-
-  if [[ "$DRY_RUN" == "1" ]]; then
+    chmod +x "$job_script"
+    
+    if [[ "$DRY_RUN" == "1" ]]; then
     cat <<EOF
 [DRY-RUN] qsub \
   -N fire_${sample} \
@@ -526,90 +536,90 @@ EOF
   ${PBS_EXTRA_ARGS} \
   ${job_script}
 EOF
-  else
-    local qsub_cmd=(qsub -N "fire_${sample}" -q "$PBS_QUEUE")
-    if [[ -n "${PBS_ACCOUNT}" ]]; then
-      qsub_cmd+=(-A "$PBS_ACCOUNT")
+    else
+        local qsub_cmd=(qsub -N "fire_${sample}" -q "$PBS_QUEUE")
+        if [[ -n "${PBS_ACCOUNT}" ]]; then
+            qsub_cmd+=(-A "$PBS_ACCOUNT")
+        fi
+        qsub_cmd+=(
+            -l "select=1:ncpus=${PBS_NCPUS}:mem=${PBS_MEM}"
+            -l "walltime=${PBS_WALLTIME}"
+            -o "${LOGS_DIR}/${sample}.\$PBS_JOBID.out"
+            -e "${LOGS_DIR}/${sample}.\$PBS_JOBID.err"
+        )
+        
+        if [[ -n "${PBS_EXTRA_ARGS}" ]]; then
+            # shellcheck disable=SC2206
+            extra_args=( ${PBS_EXTRA_ARGS} )
+            qsub_cmd+=("${extra_args[@]}")
+        fi
+        
+        qsub_cmd+=("$job_script")
+        "${qsub_cmd[@]}"
     fi
-    qsub_cmd+=(
-      -l "select=1:ncpus=${PBS_NCPUS}:mem=${PBS_MEM}"
-      -l "walltime=${PBS_WALLTIME}"
-      -o "${LOGS_DIR}/${sample}.\$PBS_JOBID.out"
-      -e "${LOGS_DIR}/${sample}.\$PBS_JOBID.err"
-    )
-
-    if [[ -n "${PBS_EXTRA_ARGS}" ]]; then
-      # shellcheck disable=SC2206
-      extra_args=( ${PBS_EXTRA_ARGS} )
-      qsub_cmd+=("${extra_args[@]}")
-    fi
-
-    qsub_cmd+=("$job_script")
-    "${qsub_cmd[@]}"
-  fi
 }
 
 submit_sample_reduction_stage() {
-  [[ -f "$CONSENSUS_BED" ]] || die "Consensus BED not found: $CONSENSUS_BED. Run consensus stage first."
-
-  require_cmd bedtools
-  validate_runner_settings
-  mkdir -p "$LOGS_DIR" "$SAMPLES_RECALC_ACTUATION_DIR"
-
-  log "Launching per-sample pileup recalculation via runner: $RUNNER"
-
-  if [[ "$RUNNER" == "local" ]]; then
-    local max_local_jobs
-    max_local_jobs="${LOCAL_JOBS:-$JOBS}"
-
-    while IFS=$'\t' read -r sample peaks pileup _rest; do
-      [[ "$sample" == "sample" ]] && continue
-      local out
-      out="$SAMPLES_RECALC_ACTUATION_DIR/${sample}.actuation.tsv"
-
-      if [[ -f "$out" ]]; then
-        log "Skipping existing output: $out"
-        continue
-      fi
-
-      submit_local_job "$pileup" "$sample" "$out" &
-      while [[ "$(jobs -r | wc -l)" -ge "$max_local_jobs" ]]; do
-        wait -n
-      done
-    done < "$MANIFEST"
-
-    wait
-    return
-  fi
-
-  while IFS=$'\t' read -r sample peaks pileup _rest; do
-    [[ "$sample" == "sample" ]] && continue
-    local out
-    out="$SAMPLES_RECALC_ACTUATION_DIR/${sample}.actuation.tsv"
-
-    if [[ -f "$out" ]]; then
-      log "Skipping existing output: $out"
-      continue
+    [[ -f "$CONSENSUS_BED" ]] || die "Consensus BED not found: $CONSENSUS_BED. Run consensus stage first."
+    
+    require_cmd bedtools
+    validate_runner_settings
+    mkdir -p "$LOGS_DIR" "$SAMPLES_RECALC_ACTUATION_DIR"
+    
+    log "Launching per-sample pileup recalculation via runner: $RUNNER"
+    
+    if [[ "$RUNNER" == "local" ]]; then
+        local max_local_jobs
+        max_local_jobs="${LOCAL_JOBS:-$JOBS}"
+        
+        while IFS=$'\t' read -r sample peaks pileup _rest; do
+            [[ "$sample" == "sample" ]] && continue
+            local out
+            out="$SAMPLES_RECALC_ACTUATION_DIR/${sample}.actuation.tsv"
+            
+            if [[ -f "$out" ]]; then
+                log "Skipping existing output: $out"
+                continue
+            fi
+            
+            submit_local_job "$pileup" "$sample" "$out" &
+            while [[ "$(jobs -r | wc -l)" -ge "$max_local_jobs" ]]; do
+                wait -n
+            done
+        done < "$MANIFEST"
+        
+        wait
+        return
     fi
-
-    case "$RUNNER" in
-      slurm)
-        submit_slurm_job "$pileup" "$sample" "$out"
-        ;;
-      pbs)
-        submit_pbs_job "$pileup" "$sample" "$out"
-        ;;
-      *)
-        die "Unsupported runner: $RUNNER"
-        ;;
-    esac
-  done < "$MANIFEST"
+    
+    while IFS=$'\t' read -r sample peaks pileup _rest; do
+        [[ "$sample" == "sample" ]] && continue
+        local out
+        out="$SAMPLES_RECALC_ACTUATION_DIR/${sample}.actuation.tsv"
+        
+        if [[ -f "$out" ]]; then
+            log "Skipping existing output: $out"
+            continue
+        fi
+        
+        case "$RUNNER" in
+            slurm)
+                submit_slurm_job "$pileup" "$sample" "$out"
+            ;;
+            pbs)
+                submit_pbs_job "$pileup" "$sample" "$out"
+            ;;
+            *)
+                die "Unsupported runner: $RUNNER"
+            ;;
+        esac
+    done < "$MANIFEST"
 }
 
 cleanup() {
-  if [[ "${KEEP_TEMP}" != "1" ]]; then
-    rm -rf "$REDUCED_DIR"
-  fi
+    if [[ "${KEEP_TEMP}" != "1" ]]; then
+        rm -rf "$REDUCED_DIR"
+    fi
 }
 
 MANIFEST=""
@@ -630,57 +640,57 @@ CLI_TIME=""
 LOGS_DIR=""
 
 while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -m|--manifest)
-      MANIFEST="$2"; shift 2 ;;
-    -o|--outdir)
-      OUTDIR="$2"; shift 2 ;;
-    -f|--ft)
-      FT_PATH="$2"; shift 2 ;;
-    --runner)
-      RUNNER="$2"; shift 2 ;;
-    -s|--scheduler-config)
-      SCHEDULER_CONFIG="$2"; shift 2 ;;
-    --stage)
-      STAGE="$2"; shift 2 ;;
-    -j|--jobs)
-      JOBS="$2"; shift 2 ;;
-    --keep-temp)
-      KEEP_TEMP="1"; shift ;;
-    --logs-dir)
-      LOGS_DIR="$2"; shift 2 ;;
-    --account)
-      CLI_ACCOUNT="$2"; shift 2 ;;
-    --partition)
-      CLI_PARTITION="$2"; shift 2 ;;
-    --queue)
-      CLI_QUEUE="$2"; shift 2 ;;
-    --cpus)
-      CLI_CPUS="$2"; shift 2 ;;
-    --mem)
-      CLI_MEM="$2"; shift 2 ;;
-    --time)
-      CLI_TIME="$2"; shift 2 ;;
-    --dry-run)
-      DRY_RUN="1"; shift ;;
-    -h|--help)
-      show_help; exit 0 ;;
-    *)
-      die "Unknown option: $1" ;;
-  esac
+    case "$1" in
+        -m|--manifest)
+        MANIFEST="$2"; shift 2 ;;
+        -o|--outdir)
+        OUTDIR="$2"; shift 2 ;;
+        -f|--ft)
+        FT_PATH="$2"; shift 2 ;;
+        --runner)
+        RUNNER="$2"; shift 2 ;;
+        -s|--scheduler-config)
+        SCHEDULER_CONFIG="$2"; shift 2 ;;
+        --stage)
+        STAGE="$2"; shift 2 ;;
+        -j|--jobs)
+        JOBS="$2"; shift 2 ;;
+        --keep-temp)
+        KEEP_TEMP="1"; shift ;;
+        --logs-dir)
+        LOGS_DIR="$2"; shift 2 ;;
+        --account)
+        CLI_ACCOUNT="$2"; shift 2 ;;
+        --partition)
+        CLI_PARTITION="$2"; shift 2 ;;
+        --queue)
+        CLI_QUEUE="$2"; shift 2 ;;
+        --cpus)
+        CLI_CPUS="$2"; shift 2 ;;
+        --mem)
+        CLI_MEM="$2"; shift 2 ;;
+        --time)
+        CLI_TIME="$2"; shift 2 ;;
+        --dry-run)
+        DRY_RUN="1"; shift ;;
+        -h|--help)
+        show_help; exit 0 ;;
+        *)
+        die "Unknown option: $1" ;;
+    esac
 done
 
 [[ -n "$MANIFEST" ]] || { show_help; die "--manifest is required"; }
 [[ -f "$MANIFEST" ]] || die "Manifest not found: $MANIFEST"
 
 case "$RUNNER" in
-  local|slurm|pbs) ;;
-  *) die "Invalid --runner: $RUNNER" ;;
+    local|slurm|pbs) ;;
+    *) die "Invalid --runner: $RUNNER" ;;
 esac
 
 case "$STAGE" in
-  all|reduce-peaks|consensus|submit-sample-reduction) ;;
-  *) die "Invalid --stage: $STAGE" ;;
+    all|reduce-peaks|consensus|submit-sample-reduction) ;;
+    *) die "Invalid --stage: $STAGE" ;;
 esac
 
 validate_manifest "$MANIFEST"
@@ -705,16 +715,16 @@ write_sample2consensus_script "$SAMPLE2CONS_SCRIPT"
 trap cleanup EXIT
 
 if [[ "$STAGE" == "all" || "$STAGE" == "reduce-peaks" ]]; then
-  reduce_peaks_stage
+    reduce_peaks_stage
 fi
 
 if [[ "$STAGE" == "all" || "$STAGE" == "consensus" ]]; then
-  [[ -n "$FT_PATH" ]] || die "--ft is required for consensus stage"
-  consensus_stage
+    [[ -n "$FT_PATH" ]] || die "--ft is required for consensus stage"
+    consensus_stage
 fi
 
 if [[ "$STAGE" == "all" || "$STAGE" == "submit-sample-reduction" ]]; then
-  submit_sample_reduction_stage
+    submit_sample_reduction_stage
 fi
 
 log "Done."
