@@ -6,7 +6,12 @@
 
 Build consensus peaks from per-sample `*peaks.bed.gz` files, then recalculate per-sample actuation values from `*pileup.bed.gz` files against those consensus intervals.
 
-It uses a manifest file with 3 columns, so sample names and file paths are explicit.
+It uses the fiberseq/fibertools-rs:
+```
+git clone --branch peak_calling --single-branch [https://github.com/my-org/fire-consensus-pipeline.git](https://github.com/fiberseq/fibertools-rs.git)
+```
+
+It uses a manifest input file with 3 columns, so sample names and file paths are explicit.
 - `sample`: sample name to use in output files
 - `peaks`: path to the sample peaks BED.gz file
 - `pileup`: path to the sample pileup BED.gz file
