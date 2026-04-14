@@ -44,13 +44,16 @@ The workflow has three main steps:
 ## How to run:
 
 ### Local:
+```text
 ./fire_consensus_pipeline.sh \
   --manifest samples.tsv \
   --ft /path/to/ft \
   --runner local \
   --outdir results
+```
 
 ### With SLURM:
+```text
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -71,8 +74,10 @@ The workflow has three main steps:
   --mem 32G \
   --time 08:00:00 \
   --outdir results
+```
 
 ### With PBS:
+```text
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -92,13 +97,14 @@ The workflow has three main steps:
   --mem 32gb \
   --time 08:00:00 \
   --outdir results
-
+```
 
 ## Final outputs
 
-Output structure:
+## Output structure
 
-results/
+```text
+fire_consensus_out/
 ├── consensus.intervals.bed
 ├── consensus_peak_ids.tsv
 ├── merged.4col.bed.gz
@@ -106,11 +112,12 @@ results/
 ├── output.mock_bam.bai
 ├── output.peaks
 ├── logs/
-├── sample2consensus.sh 
+├── sample2consensus.sh
 ├── samples_recalc_actuation/
 │   ├── SAMPLE_A.actuation.tsv
 │   └── SAMPLE_B.actuation.tsv
 └── tmp_consensus_inputs/
+```
 
 Per-sample final files are written to:
 
