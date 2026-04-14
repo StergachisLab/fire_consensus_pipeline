@@ -4,6 +4,7 @@
 ![Reproducible](https://img.shields.io/badge/reproducible-yes-brightgreen.svg)
 ![Lint & Format](https://github.com/StergachisLab/fire_consensus_pipeline/actions/workflows/lint.yml/badge.svg)
 
+
 # FIRE consensus pipeline
 ---
 
