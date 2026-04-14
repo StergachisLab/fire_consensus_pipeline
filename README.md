@@ -1,3 +1,8 @@
+![Downloads](https://img.shields.io/github/downloads/StergachisLab/fire_consensus_pipeline/total)
+![Last Commit](https://img.shields.io/github/last-commit/StergachisLab/fire_consensus_pipeline)
+![License](https://img.shields.io/github/license/StergachisLab/fire_consensus_pipeline)
+![Reproducible](https://img.shields.io/badge/reproducible-yes-brightgreen.svg)
+![Lint & Format](https://github.com/StergachisLab/fire_consensus_pipeline/actions/workflows/lint.yml/badge.svg)
 
 # FIRE consensus pipeline
 ---
