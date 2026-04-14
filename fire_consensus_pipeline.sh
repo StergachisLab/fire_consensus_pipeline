@@ -290,13 +290,13 @@ sample_to_consensus_bedtools() {
                chrom = $5
                start = $6
                end = $7
-               cov = $8 + 0
-               fire = $9 + 0
-               score = $10 + 0
-               cov_h1 = $11 + 0
-               fire_h1 = $12 + 0
-               cov_h2 = $13 + 0
-               fire_h2 = $14 + 0
+               cov = $8
+               fire = $9
+               score = $10
+               cov_h1 = $11
+               fire_h1 = $12
+               cov_h2 = $13
+               fire_h2 = $14
                act = (cov > 0 ? fire / cov : "NA")
 
                print peak_id, chrom, start, end, score, cov, fire, act, cov_h1, fire_h1, cov_h2, fire_h2
