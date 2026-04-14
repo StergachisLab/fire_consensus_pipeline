@@ -123,3 +123,12 @@ Per-sample final files are written to:
 
 ```text
 samples_recalc_actuation/<sample>.actuation.tsv
+```
+## Example output file
+
+```tsv
+peak	sample	chrom	start	end	score	coverage	fire_coverage	actuation	coverage_H1	fire_coverage_H1	coverage_H2	fire_coverage_H2
+chr1_1000_1200	SAMPLE_A	chr1	1012	1188	42	100	12	0.12	48	6	52	6
+chr1_2000_2200	SAMPLE_A	chr1	2015	2194	17	80	3	0.0375	35	1	45	2
+chr2_500_800	SAMPLE_A	chr2	520	790	25	60	9	0.15	28	4	32	5
+```
