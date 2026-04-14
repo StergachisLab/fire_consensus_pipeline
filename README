@@ -23,7 +23,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
   --manifest samples.tsv \
   --ft /path/to/ft \
   --runner slurm \
-  --scheduler-config scheduler.conf \
+  --scheduler-config slurm.conf \
   --outdir results
 
 -or-
@@ -31,7 +31,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
   --manifest samples.tsv \
   --ft /path/to/ft \
   --runner slurm \
-  --scheduler-config scheduler.conf \
+  --scheduler-config slurm.conf \
   --account myaccount \
   --partition compute \
   --cpus 4 \
@@ -44,7 +44,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
   --manifest samples.tsv \
   --ft /path/to/ft \
   --runner pbs \
-  --scheduler-config scheduler.conf \
+  --scheduler-config pbs.conf \
   --outdir results
 
 -or-
@@ -52,7 +52,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
   --manifest samples.tsv \
   --ft /path/to/ft \
   --runner pbs \
-  --scheduler-config scheduler.conf \
+  --scheduler-config pbs.conf \
   --queue batch \
   --cpus 4 \
   --mem 32gb \
@@ -60,7 +60,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
   --outdir results
 
 
-It uses a manifest file so sample names and file paths are explicit rather than inferred from filenames.
+It uses a manifest file so sample names and file paths are explicit.
 
 The workflow has three main steps:
 
