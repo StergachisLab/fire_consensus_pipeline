@@ -1,17 +1,24 @@
-# fire_consensus_pipeline
+
+# FIRE consensus pipeline
+---
+
+## What it does:
 
 Build consensus peaks from per-sample `*peaks.bed.gz` files, then recalculate per-sample actuation values from `*pileup.bed.gz` files against those consensus intervals.
 
+It uses a manifest file with 3 columns, so sample names and file paths are explicit.
+- `sample`: sample name to use in output files
+- `peaks`: path to the sample peaks BED.gz file
+- `pileup`: path to the sample pileup BED.gz file
+
 The pipeline supports three execution backends for the per-sample recalculation step:
 
-- local
-- slurm
-- pbs
+- `local`
+- `slurm`
+- `pbs`
 
-It uses a manifest file with 3 columns, so sample names and file paths are explicit.
-- sample: sample name to use in output files
-- peaks: path to the sample peaks BED.gz file
-- pileup: path to the sample pileup BED.gz file
+
+## Workflow:
 
 The workflow has three main steps:
 
@@ -34,16 +41,16 @@ The workflow has three main steps:
    - writes one final output per sample
 
 
-## Running
+## How to run:
 
-# Local run:
+### Local:
 ./fire_consensus_pipeline.sh \
   --manifest samples.tsv \
   --ft /path/to/ft \
   --runner local \
   --outdir results
 
-# With SLURM:
+### With SLURM:
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -52,6 +59,7 @@ The workflow has three main steps:
   --outdir results
 
 -or-
+
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -64,7 +72,7 @@ The workflow has three main steps:
   --time 08:00:00 \
   --outdir results
 
-# With PBS:
+### With PBS:
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -73,6 +81,7 @@ The workflow has three main steps:
   --outdir results
 
 -or-
+
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -84,8 +93,6 @@ The workflow has three main steps:
   --time 08:00:00 \
   --outdir results
 
-
----
 
 ## Final outputs
 
