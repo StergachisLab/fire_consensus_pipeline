@@ -8,6 +8,31 @@ The pipeline supports three execution backends for the per-sample recalculation 
 - slurm
 - pbs
 
+It uses a manifest file with 3 columns, so sample names and file paths are explicit.
+- sample: sample name to use in output files
+- peaks: path to the sample peaks BED.gz file
+- pileup: path to the sample pileup BED.gz file
+
+The workflow has three main steps:
+
+1. **Reduce per-sample peak files**
+   - reads each sample's `peaks.bed.gz`
+   - creates a temporary simplified representation used to build the pooled consensus
+
+2. **Build consensus peaks**
+   - merges reduced peak information across samples
+   - runs `ft mock-fire`
+   - runs `ft call-peaks`
+   - writes:
+     - `consensus.intervals.bed`
+     - `consensus_peak_ids.tsv`
+
+3. **Recalculate per-sample actuation on consensus intervals**
+   - intersects each sample's pileup file with the consensus peaks
+   - ranks overlapping rows
+   - keeps the best row per consensus peak
+   - writes one final output per sample
+
 
 ## Running
 
@@ -59,28 +84,6 @@ The pipeline supports three execution backends for the per-sample recalculation 
   --time 08:00:00 \
   --outdir results
 
-
-It uses a manifest file so sample names and file paths are explicit.
-
-The workflow has three main steps:
-
-1. **Reduce per-sample peak files**
-   - reads each sample's `peaks.bed.gz`
-   - creates a temporary simplified representation used to build the pooled consensus
-
-2. **Build consensus peaks**
-   - merges reduced peak information across samples
-   - runs `ft mock-fire`
-   - runs `ft call-peaks`
-   - writes:
-     - `consensus.intervals.bed`
-     - `consensus_peak_ids.tsv`
-
-3. **Recalculate per-sample actuation on consensus intervals**
-   - intersects each sample's pileup file with the consensus peaks
-   - ranks overlapping rows
-   - keeps the best row per consensus peak
-   - writes one final output per sample
 
 ---
 
