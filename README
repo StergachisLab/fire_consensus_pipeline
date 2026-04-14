@@ -101,6 +101,7 @@ results/
 ├── output.mock_bam.bai
 ├── output.peaks
 ├── logs/
+├── sample2consensus.sh 
 ├── samples_recalc_actuation/
 │   ├── SAMPLE_A.actuation.tsv
 │   └── SAMPLE_B.actuation.tsv
