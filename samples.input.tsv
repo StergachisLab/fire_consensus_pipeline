@@ -1,0 +1,4 @@
+sample	peaks	pileup
+SAMPLE_A	/data/project/run1/SAMPLE_A-peaks.bed.gz	/data/project/run1/SAMPLE_A-pileup.bed.gz
+SAMPLE_B	/data/project/run1/SAMPLE_B-peaks.bed.gz	/data/project/run1/SAMPLE_B-pileup.bed.gz
+SAMPLE_C	/data/project/run2/SAMPLE_C-peaks.bed.gz	/data/project/run2/SAMPLE_C-pileup.bed.gz
