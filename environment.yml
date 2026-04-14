@@ -7,7 +7,7 @@ dependencies:
   - coreutils
   - gawk
   - gzip
-  - python=3.11
+  - python=>3.11
   - bedtools
   - samtools
   - htslib
