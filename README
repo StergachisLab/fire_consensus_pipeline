@@ -20,7 +20,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
 
 # With SLURM (check slurm.conf)
 ./fire_consensus_pipeline.sh \
-  --manifest samples.tsv \
+  --manifest samples.input.tsv \
   --ft /path/to/ft \
   --runner slurm \
   --scheduler-config slurm.conf \
@@ -28,7 +28,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
 
 -or-
 ./fire_consensus_pipeline.sh \
-  --manifest samples.tsv \
+  --manifest samples.input.tsv \
   --ft /path/to/ft \
   --runner slurm \
   --scheduler-config slurm.conf \
@@ -41,7 +41,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
 
 # With PBS (check pbs.conf)
 ./fire_consensus_pipeline.sh \
-  --manifest samples.tsv \
+  --manifest samples.input.tsv \
   --ft /path/to/ft \
   --runner pbs \
   --scheduler-config pbs.conf \
@@ -49,7 +49,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
 
 -or-
 ./fire_consensus_pipeline.sh \
-  --manifest samples.tsv \
+  --manifest samples.input.tsv \
   --ft /path/to/ft \
   --runner pbs \
   --scheduler-config pbs.conf \
