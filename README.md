@@ -3,7 +3,7 @@
 ![Reproducible](https://img.shields.io/badge/reproducible-yes-brightgreen.svg)
 [![ShellCheck](https://github.com/StergachisLab/fire_consensus_pipeline/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/StergachisLab/fire_consensus_pipeline/actions/workflows/shellcheck.yml)
 
-# FIRE consensus pipeline
+# FIRE peak consensus pipeline
 ---
 
 ## What it does:
