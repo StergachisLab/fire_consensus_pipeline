@@ -15,11 +15,11 @@ It uses a manifest file with 3 columns, so sample names and file paths are expli
 
 The workflow has three main steps:
 
-1. **Reduce per-sample peak files**
+1. Reduce per-sample peak files:
    - reads each sample's `peaks.bed.gz`
    - creates a temporary simplified representation used to build the pooled consensus
 
-2. **Build consensus peaks**
+2. Build consensus peaks:
    - merges reduced peak information across samples
    - runs `ft mock-fire`
    - runs `ft call-peaks`
@@ -27,7 +27,7 @@ The workflow has three main steps:
      - `consensus.intervals.bed`
      - `consensus_peak_ids.tsv`
 
-3. **Recalculate per-sample actuation on consensus intervals**
+3. Recalculate per-sample actuation on consensus intervals:
    - intersects each sample's pileup file with the consensus peaks
    - ranks overlapping rows
    - keeps the best row per consensus peak
@@ -36,14 +36,14 @@ The workflow has three main steps:
 
 ## Running
 
-# Local run 
+# Local run:
 ./fire_consensus_pipeline.sh \
   --manifest samples.tsv \
   --ft /path/to/ft \
   --runner local \
   --outdir results
 
-# With SLURM (check slurm.conf)
+# With SLURM:
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -64,7 +64,7 @@ The workflow has three main steps:
   --time 08:00:00 \
   --outdir results
 
-# With PBS (check pbs.conf)
+# With PBS:
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -89,11 +89,6 @@ The workflow has three main steps:
 
 ## Final outputs
 
-Per-sample final files are written to:
-
-```text
-samples_recalc_actuation/<sample>.actuation.tsv
-
 Output structure:
 
 results/
@@ -109,3 +104,8 @@ results/
 │   ├── SAMPLE_A.actuation.tsv
 │   └── SAMPLE_B.actuation.tsv
 └── tmp_consensus_inputs/
+
+Per-sample final files are written to:
+
+```text
+samples_recalc_actuation/<sample>.actuation.tsv
