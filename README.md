@@ -6,24 +6,6 @@
 
 Build consensus peaks from per-sample `*peaks.bed.gz` files, then recalculate per-sample actuation values from `*pileup.bed.gz` files against those consensus intervals.
 
-Pull the `peak_calling` branch of the fiberseq/fibertools-rs tool for this workflow:
-```
-git clone --branch peak_calling --single-branch https://github.com/fiberseq/fibertools-rs.git
-git switch peak_calling
-```
-
-It uses a manifest input file with 3 columns, so sample names and file paths are explicit.
-- `sample`: sample name to use in output files
-- `peaks`: path to the sample peaks BED.gz file
-- `pileup`: path to the sample pileup BED.gz file
-
-The pipeline supports three execution backends for the per-sample recalculation step:
-
-- `local`
-- `slurm`
-- `pbs`
-
-
 ## Workflow:
 
 The workflow has three main steps:
@@ -48,6 +30,23 @@ The workflow has three main steps:
 
 
 ## How to run:
+
+Pull the `peak_calling` branch of the fiberseq/fibertools-rs tool for this workflow:
+```
+git clone --branch peak_calling --single-branch https://github.com/fiberseq/fibertools-rs.git
+git switch peak_calling
+```
+
+Create a manifest input file with 3 columns, so sample names and file paths are explicit.
+- `sample`: sample name to use in output files
+- `peaks`: path to the sample peaks BED.gz file
+- `pileup`: path to the sample pileup BED.gz file
+
+The pipeline supports three execution backends for the per-sample recalculation step:
+
+- `local`
+- `slurm`
+- `pbs`
 
 ### Local:
 ```text
