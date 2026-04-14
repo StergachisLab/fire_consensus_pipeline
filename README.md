@@ -8,7 +8,7 @@ Build consensus peaks from per-sample `*peaks.bed.gz` files, then recalculate pe
 
 It uses the fiberseq/fibertools-rs:
 ```
-git clone --branch peak_calling --single-branch [https://github.com/my-org/fire-consensus-pipeline.git](https://github.com/fiberseq/fibertools-rs.git)
+git clone --branch peak_calling --single-branch https://github.com/fiberseq/fibertools-rs.git
 ```
 
 It uses a manifest input file with 3 columns, so sample names and file paths are explicit.
