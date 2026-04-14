@@ -1,4 +1,4 @@
-## fire_consensus_pipeline
+# fire_consensus_pipeline
 
 Build consensus peaks from per-sample `*peaks.bed.gz` files, then recalculate per-sample actuation values from `*pileup.bed.gz` files against those consensus intervals.
 
