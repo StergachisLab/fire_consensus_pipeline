@@ -1,7 +1,7 @@
 ![Downloads](https://img.shields.io/github/downloads/StergachisLab/fire_consensus_pipeline/total)
 ![Last Commit](https://img.shields.io/github/last-commit/StergachisLab/fire_consensus_pipeline)
 ![Reproducible](https://img.shields.io/badge/reproducible-yes-brightgreen.svg)
-
+[![ShellCheck](https://github.com/StergachisLab/fire_consensus_pipeline/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/StergachisLab/fire_consensus_pipeline/actions/workflows/shellcheck.yml)
 
 # FIRE consensus pipeline
 ---
