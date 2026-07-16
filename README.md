@@ -38,6 +38,11 @@ The workflow has three main steps:
 Pull the `peak_calling` branch of the fiberseq/fibertools-rs tool for this workflow:
 ```
 git clone --branch peak_calling --single-branch https://github.com/fiberseq/fibertools-rs.git
+git branch --show-current
+```
+
+If it's not already on peak_calling, switch to taht branch:
+```
 git switch peak_calling
 ```
 
