@@ -35,7 +35,13 @@ The workflow has three main steps:
 
 ## How to run:
 
-Pull the `peak_calling` branch of the fiberseq/fibertools-rs tool for this workflow:
+Create the conda environment:
+
+```
+conda env create -f environment.yml
+```
+
+If the conda fibertools-rs version hasn't the features implemented yet, you might want to pull the `peak_calling` branch of the fiberseq/fibertools-rs tool for this workflow:
 ```
 git clone --branch peak_calling --single-branch https://github.com/fiberseq/fibertools-rs.git
 cd fibertools-rs/
