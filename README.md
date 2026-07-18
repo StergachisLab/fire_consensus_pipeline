@@ -39,6 +39,7 @@ Create the conda environment:
 
 ```
 conda env create -f environment.yml
+conda activate fire-consensus-pipeline
 ```
 
 If the conda fibertools-rs version hasn't the features implemented yet, you might want to pull the `peak_calling` branch of the fiberseq/fibertools-rs tool for this workflow:
