@@ -33,7 +33,7 @@ The workflow has three main steps:
    - writes one final output per sample
 
 
-## How to run:
+## Running the pipeline:
 
 Create the conda environment:
 
@@ -59,11 +59,19 @@ Create a manifest input file with 3 columns, so sample names and file paths are 
 - `peaks`: path to the sample peaks BED.gz file
 - `pileup`: path to the sample pileup BED.gz file
 
-The pipeline supports three execution backends for the per-sample recalculation step:
+The first two steps can run on a single node with approximately 100 GB of memory and 8 CPUs (--cpus-per-task=8), but it's always dependent on how many samples you process, so scale as needed. You can run these steps either on an interactive node or by submitting them as a scheduled job.
+
+The third step performs a per-sample recalculation and uses one node per sample. Each individual job has relatively modest CPU and memory requirements, but your compute environment must have enough available resources to scale to the number of samples listed in the manifest.
+
+The pipeline supports three execution backends:
 
 - `local`
 - `slurm`
 - `pbs`
+
+
+When using SLURM or PBS, the per-sample jobs are submitted automatically after the first two steps complete successfully. Scheduler-specific settings can be provided through a scheduler configuration file or as command-line arguments.
+
 
 ### Local:
 ```text
@@ -75,6 +83,9 @@ The pipeline supports three execution backends for the per-sample recalculation 
 ```
 
 ### With SLURM:
+
+Using a scheduler configuration file:
+
 ```text
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
@@ -83,7 +94,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
   --scheduler-config slurm.conf \
   --outdir results
 
--or-
+-or- Alternatively, provide the scheduler settings directly:
 
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
@@ -99,6 +110,9 @@ The pipeline supports three execution backends for the per-sample recalculation 
 ```
 
 ### With PBS:
+
+Using a scheduler configuration file:
+
 ```text
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
@@ -107,7 +121,7 @@ The pipeline supports three execution backends for the per-sample recalculation 
   --scheduler-config pbs.conf \
   --outdir results
 
--or-
+-or- Alternatively, provide the scheduler settings directly:
 
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
