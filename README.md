@@ -59,7 +59,7 @@ Create a manifest input file with 3 columns, so sample names and file paths are 
 - `peaks`: path to the sample peaks BED.gz file
 - `pileup`: path to the sample pileup BED.gz file
 
-The first two steps can run with approximately 100 GB of memory and 8 CPUs (--cpus-per-task=4), but resources are  most often dependent on how many samples you process, so scale as needed. You can run these steps either on an interactive node or by submitting them as a scheduled job.
+The first two steps can run with approximately 100 GB of memory and 8 CPUs (--cpus-per-task=4), but resources are  most often dependent on how many samples you process, so scale as needed. You can run this tool either on an interactive node or by submitting them as a scheduled job.
 
 The third step performs a per-sample recalculation and uses one node per sample. Each individual job has relatively modest CPU and memory requirements, but your compute environment must have enough available resources to scale to the number of samples listed in the manifest.
 
@@ -70,7 +70,7 @@ The pipeline supports three execution backends:
 - `pbs`
 
 
-When using SLURM or PBS, the per-sample jobs are submitted automatically after the first two steps complete successfully. Scheduler-specific settings can be provided through a scheduler configuration file or as command-line arguments.
+When using SLURM or PBS, the third step `per-sample jobs`  are submitted automatically after the first two steps complete successfully. Scheduler-specific settings can be provided through a scheduler configuration file or as command-line arguments, but these resources pertain to the third step, not the prior two.
 
 
 ### Local:
