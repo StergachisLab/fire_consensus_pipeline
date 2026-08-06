@@ -59,7 +59,7 @@ Create a manifest input file with 3 columns, so sample names and file paths are 
 - `peaks`: path to the sample peaks BED.gz file
 - `pileup`: path to the sample pileup BED.gz file
 
-The first two steps can run with approximately `100 GB of memory and 8 CPUs (--cpus-per-task=4)`, but resources are  most often dependent on how many samples you process, so scale as needed. You can run this tool either on an interactive node or by submitting this as a job. Example:
+The first two steps can run with approximately `100 GB of memory and 8 CPUs (--cpus-per-task=4)`, but resources are  most often dependent on how many samples you process and the size of your input files, so scale as needed. You can run this tool either on an interactive node or by submitting this as a job. Example:
 
 
 ```
