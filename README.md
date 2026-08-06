@@ -88,7 +88,11 @@ SAMPLE_B	/path/to/SAMPLE_B.peaks.bed.gz	/path/to/SAMPLE_B.pileup.bed.gz
 
 ## Resource Requirements
 
-The first two steps can typically run on a single node with approximately **100 GB of memory and 8 CPUs**. However, the required resources depend on:
+The entire pipeline is launched with a single command. That command should be run either on an interactive node or as a submitted batch job with sufficient resources for the first two steps—typically about **100 GB of memory and 8 CPUs**.
+
+After the first two steps complete, the same pipeline command automatically runs or submits the per-sample recalculation jobs for the third step, according to the selected `--runner` backend.
+
+The required resources depend on:
 
 * The number of samples being processed.
 * The sizes of the input files.
@@ -96,8 +100,6 @@ The first two steps can typically run on a single node with approximately **100 
 * Whether sufficient scheduler resources are available to run the third step in parallel.
 
 Adjust the requested resources as needed for your dataset and computing environment.
-
-The first two steps can be run either on an interactive node or as a submitted batch job.
 
 For example, on a SLURM cluster:
 
