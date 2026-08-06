@@ -88,9 +88,13 @@ SAMPLE_B	/path/to/SAMPLE_B.peaks.bed.gz	/path/to/SAMPLE_B.pileup.bed.gz
 
 ## Resource Requirements
 
-The entire pipeline is launched with a single command. That command should be run either on an interactive node or as a submitted batch job with sufficient resources for the first two steps—typically about **100 GB of memory and 8 CPUs**.
+The entire pipeline is launched with a single command, but its resource allocation differs across the three workflow steps. 
 
-After the first two steps complete, the same pipeline command automatically runs or submits the per-sample recalculation jobs for the third step, according to the selected `--runner` backend.
+The command itself runs the first two steps on the node where it was started. This node typically requires approximately 100 GB of memory and 8 CPUs, although the exact requirements depend on the number of samples and the sizes of the input files. Run the pipeline command either on an interactive node or within a submitted batch job that has sufficient resources for these steps.
+
+After the first two steps complete successfully, the pipeline automatically begins the third step. With the local runner, the per-sample recalculations run locally (slowest). With the slurm or pbs runner, the pipeline submits one scheduler job per sample using the resources specified in the scheduler configuration file or command-line options.
+
+The --cpus, --mem, and --time options passed to fire_consensus_pipeline.sh apply only to the per-sample jobs in the third step. They do not allocate resources for the node running the main pipeline command.
 
 The required resources depend on:
 
