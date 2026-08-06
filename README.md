@@ -6,70 +6,116 @@
 # FIRE peak consensus pipeline
 ---
 
-## What it does:
+## Overview
 
-Build consensus peaks from per-sample `*peaks.bed.gz` files, then recalculate per-sample actuation values from `*pileup.bed.gz` files against those consensus intervals.
+This pipeline builds consensus peaks from per-sample `*peaks.bed.gz` files and then recalculates per-sample actuation values from `*pileup.bed.gz` files using the consensus intervals.
 
-## Workflow:
+## Workflow
 
-The workflow has three main steps:
+The pipeline consists of three main steps.
 
-1. Reduce per-sample peak files:
-   - reads each sample's `peaks.bed.gz`
-   - creates a temporary simplified representation used to build the pooled consensus
+### 1. Reduce per-sample peak files
 
-2. Build consensus peaks:
-   - merges reduced peak information across samples
-   - runs `ft mock-fire`
-   - runs `ft call-peaks`
-   - writes:
-     - `consensus.intervals.bed`
-     - `consensus_peak_ids.tsv`
+For each sample, the pipeline:
 
-3. Recalculate per-sample actuation on consensus intervals:
-   - intersects each sample's pileup file with the consensus peaks
-   - ranks overlapping rows
-   - keeps the best row per consensus peak
-   - writes one final output per sample
+* Reads the `peaks.bed.gz` file.
+* Creates a temporary, simplified representation of the peak data.
+* Uses the simplified files to build the pooled consensus.
 
+### 2. Build consensus peaks
 
-## Running the pipeline:
+The pipeline:
 
-Create the conda environment:
+* Merges the reduced peak information across all samples.
+* Runs `ft mock-fire`.
+* Runs `ft call-peaks`.
+* Writes the following consensus files:
 
-```
+  * `consensus.intervals.bed`
+  * `consensus_peak_ids.tsv`
+
+### 3. Recalculate per-sample actuation values
+
+For each sample, the pipeline:
+
+* Intersects the sample's pileup file with the consensus peaks.
+* Ranks rows that overlap each consensus peak.
+* Retains the best row for each consensus peak.
+* Writes one final actuation file per sample.
+
+## Installation
+
+Create and activate the Conda environment:
+
+```bash
 conda env create -f environment.yml
 conda activate fire-consensus-pipeline
 ```
 
-If the conda fibertools-rs version doesn't have the features we use on this pipeline implemented yet, you might want to pull the `peak_calling` branch of the fiberseq/fibertools-rs tool for this workflow:
-```
-git clone --branch peak_calling --single-branch https://github.com/fiberseq/fibertools-rs.git
+If the version of `fibertools-rs` available through Conda does not yet include the features required by this pipeline, clone the `peak_calling` branch of `fiberseq/fibertools-rs`:
+
+```bash
+git clone --branch peak_calling --single-branch \
+  https://github.com/fiberseq/fibertools-rs.git
+
 cd fibertools-rs/
 git branch --show-current
 ```
 
-If it's not already on peak_calling, switch to that branch:
-```
+If the repository is not already on the `peak_calling` branch, switch to it:
+
+```bash
 git switch peak_calling
 ```
 
-Create a manifest input file with 3 columns, so sample names and file paths are explicit.
-- `sample`: sample name to use in output files
-- `peaks`: path to the sample peaks BED.gz file
-- `pileup`: path to the sample pileup BED.gz file
+Build `fibertools-rs` according to its installation instructions, and then provide the path to the resulting `ft` executable using the `--ft` option.
 
-The first two steps can run with approximately `100 GB of memory and 8 CPUs (--cpus-per-task=4)`, but resources are  most often dependent on how many samples you process, the size of your input files, and whether you will run this locally or if you have a scheduler available to run the third step in parallel, so scale as needed. You can run this tool either on an interactive node or by submitting this as a job. Example:
+## Input Manifest
 
+Create a tab-separated manifest file with three columns so that sample names and input file paths are explicitly defined:
 
+* `sample`: Sample name to use in output filenames.
+* `peaks`: Path to the sample's peaks BED.gz file.
+* `pileup`: Path to the sample's pileup BED.gz file.
+
+For example:
+
+```tsv
+sample	peaks	pileup
+SAMPLE_A	/path/to/SAMPLE_A.peaks.bed.gz	/path/to/SAMPLE_A.pileup.bed.gz
+SAMPLE_B	/path/to/SAMPLE_B.peaks.bed.gz	/path/to/SAMPLE_B.pileup.bed.gz
 ```
-salloc -p compute-ultramem -A stergachislab --time=70:00:00 --mem=100G --cpus-per-task=8
+
+## Resource Requirements
+
+The first two steps can typically run on a single node with approximately **100 GB of memory and 8 CPUs**. However, the required resources depend on:
+
+* The number of samples being processed.
+* The sizes of the input files.
+* Whether the pipeline is run locally or with a job scheduler.
+* Whether sufficient scheduler resources are available to run the third step in parallel.
+
+Adjust the requested resources as needed for your dataset and computing environment.
+
+The first two steps can be run either on an interactive node or as a submitted batch job.
+
+For example, on a SLURM cluster:
+
+```bash
+salloc \
+  --partition compute-ultramem \
+  --account stergachislab \
+  --time 70:00:00 \
+  --mem 100G \
+  --cpus-per-task 8
+
 conda activate fire-consensus-pipeline
+
 PATH_TO_FT=/mmfs1/gscratch/stergachislab/mvollger/projects/dev-fibertools-rs/target/release/ft
 
 ./fire_consensus_pipeline.sh \
   --manifest manifest.tsv \
-  --ft $PATH_TO_FT \
+  --ft "$PATH_TO_FT" \
   --runner slurm \
   --scheduler-config slurm.conf \
   --account stergachislab \
@@ -78,15 +124,29 @@ PATH_TO_FT=/mmfs1/gscratch/stergachislab/mvollger/projects/dev-fibertools-rs/tar
   --mem 32G \
   --time 08:00:00 \
   --outdir results
-
 ```
 
-To note: the third step performs a `per-sample recalculation` and runs parallel jobs. Each individual job has relatively modest CPU and memory requirements, but your compute environment must have enough available resources to scale to the number of samples listed in the manifest.
+The `--cpus`, `--mem`, and `--time` options in the pipeline command apply to the per-sample jobs created during the third step. They do not control the resources allocated to the first two steps.
 
-When using SLURM or PBS, the third step `per-sample jobs` are submitted automatically after the first two steps complete successfully. Scheduler-specific settings for this third step can be provided through a scheduler configuration file or as command-line arguments, but these resources pertain to the third step, not the prior two.
+## Per-Sample Parallel Jobs
 
-### Local:
-```text
+The third step performs the per-sample recalculation and can run multiple jobs in parallel.
+
+Each individual job has relatively modest CPU and memory requirements. However, your computing environment must have enough available resources to scale to the number of samples listed in the manifest.
+
+When using SLURM or PBS, the per-sample jobs are submitted automatically after the first two steps complete successfully.
+
+Scheduler-specific settings for these jobs can be provided through a scheduler configuration file or as command-line arguments.
+
+The pipeline supports the following execution backends:
+
+* `local`
+* `slurm`
+* `pbs`
+
+## Running Locally
+
+```bash
 ./fire_consensus_pipeline.sh \
   --manifest samples.tsv \
   --ft /path/to/ft \
@@ -94,20 +154,22 @@ When using SLURM or PBS, the third step `per-sample jobs` are submitted automati
   --outdir results
 ```
 
-### With SLURM:
+## Running with SLURM
 
-Using a scheduler configuration file:
+### Using a scheduler configuration file
 
-```text
+```bash
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
   --runner slurm \
   --scheduler-config slurm.conf \
   --outdir results
+```
 
--or- Alternatively, provide the scheduler settings directly:
+### Providing scheduler settings directly
 
+```bash
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -121,20 +183,22 @@ Using a scheduler configuration file:
   --outdir results
 ```
 
-### With PBS:
+## Running with PBS
 
-Using a scheduler configuration file:
+### Using a scheduler configuration file
 
-```text
+```bash
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
   --runner pbs \
   --scheduler-config pbs.conf \
   --outdir results
+```
 
--or- Alternatively, provide the scheduler settings directly:
+### Providing scheduler settings directly
 
+```bash
 ./fire_consensus_pipeline.sh \
   --manifest samples.input.tsv \
   --ft /path/to/ft \
@@ -147,9 +211,9 @@ Using a scheduler configuration file:
   --outdir results
 ```
 
-## Final outputs
+## Output Structure
 
-## Output structure
+The output directory has the following structure:
 
 ```text
 fire_consensus_out/
@@ -167,12 +231,13 @@ fire_consensus_out/
 └── tmp_consensus_inputs/
 ```
 
-Per-sample final files are written to:
+The final per-sample files are written to:
 
 ```text
 samples_recalc_actuation/<sample>.actuation.tsv
 ```
-## Example output file
+
+## Example Output File
 
 ```tsv
 peak	sample	chrom	start	end	score	coverage	fire_coverage	actuation	coverage_H1	fire_coverage_H1	coverage_H2	fire_coverage_H2
