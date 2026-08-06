@@ -59,9 +59,29 @@ Create a manifest input file with 3 columns, so sample names and file paths are 
 - `peaks`: path to the sample peaks BED.gz file
 - `pileup`: path to the sample pileup BED.gz file
 
-The first two steps can run with approximately 100 GB of memory and 8 CPUs (--cpus-per-task=4), but resources are  most often dependent on how many samples you process, so scale as needed. You can run this tool either on an interactive node or by submitting them as a scheduled job.
+The first two steps can run with approximately `100 GB of memory and 8 CPUs (--cpus-per-task=4)`, but resources are  most often dependent on how many samples you process, so scale as needed. You can run this tool either on an interactive node or by submitting this as a job. Example:
 
-The third step performs a per-sample recalculation and uses one node per sample. Each individual job has relatively modest CPU and memory requirements, but your compute environment must have enough available resources to scale to the number of samples listed in the manifest.
+
+```
+salloc -p compute-ultramem -A stergachislab --time=70:00:00 --mem=100G --cpus-per-task=8
+conda activate fire-consensus-pipeline
+PATH_TO_FT=/mmfs1/gscratch/stergachislab/mvollger/projects/dev-fibertools-rs/target/release/ft
+
+./fire_consensus_pipeline.sh \
+  --manifest manifest.tsv \
+  --ft $PATH_TO_FT \
+  --runner slurm \
+  --scheduler-config slurm.conf \
+  --account stergachislab \
+  --partition ckpt \
+  --cpus 4 \
+  --mem 32G \
+  --time 08:00:00 \
+  --outdir results
+
+```
+
+To note: he third step performs a per-sample recalculation and uses one node per sample. Each individual job has relatively modest CPU and memory requirements, but your compute environment must have enough available resources to scale to the number of samples listed in the manifest.
 
 The pipeline supports three execution backends:
 
