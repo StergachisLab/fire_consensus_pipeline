@@ -81,9 +81,9 @@ PATH_TO_FT=/mmfs1/gscratch/stergachislab/mvollger/projects/dev-fibertools-rs/tar
 
 ```
 
-To note: he third step performs a per-sample recalculation and uses one node per sample. Each individual job has relatively modest CPU and memory requirements, but your compute environment must have enough available resources to scale to the number of samples listed in the manifest.
+To note: the third step performs a `per-sample recalculation` and runs as a separate thread in parallel. Each individual job has relatively modest CPU and memory requirements, but your compute environment must have enough available resources to scale to the number of samples listed in the manifest.
 
-When using SLURM or PBS, the third step `per-sample jobs`  are submitted automatically after the first two steps complete successfully. Scheduler-specific settings can be provided through a scheduler configuration file or as command-line arguments, but these resources pertain to the third step, not the prior two.
+When using SLURM or PBS, the third step `per-sample jobs` are submitted automatically after the first two steps complete successfully. Scheduler-specific settings for this third step can be provided through a scheduler configuration file or as command-line arguments, but these resources pertain to the third step, not the prior two.
 
 ### Local:
 ```text
