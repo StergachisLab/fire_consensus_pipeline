@@ -254,31 +254,25 @@ sample_to_consensus_bedtools() {
     matched_tsv=$(mktemp "${out_tsv}.matched.XXXXXX")
     tmp_out=$(mktemp "${out_tsv}.tmp.XXXXXX")
 
-    # 1. Select the pileup columns needed for recalculation.
     if ! gzip -dc "$sample_file" \
         | awk 'BEGIN{FS=OFS="\t"}
                NR==1 && $1 ~ /^#/ {next}
                {
                    print $1,$2,$3,$4,$5,$6,$9,$10,$14,$15
                }' \
-        # 2. Intersect consensus intervals against the sample pileup.
         | bedtools intersect \
             -a "$consensus_bed" \
             -b - \
             -wa -wb -sorted \
-        # 3. Reformat each overlap into the internal ranking representation.
         | awk 'BEGIN{FS=OFS="\t"}
                {
                    peak_id = $4
-
                    pileup_chrom = $5
                    pileup_start = $6
                    pileup_end = $7
-
                    cov = $8
                    fire = $9
                    score = $10
-
                    cov_h1 = $11
                    fire_h1 = $12
                    cov_h2 = $13
@@ -299,23 +293,20 @@ sample_to_consensus_bedtools() {
                          cov_h2, \
                          fire_h2
                }' \
-        # 4. Rank candidate pileup rows within each consensus peak.
         | sort -t $'\t' \
             -k1,1 \
             -k5,5nr \
             -k8,8gr \
             -k7,7nr \
             -k6,6nr \
-        # 5. Keep only the highest-ranked pileup row for each consensus peak.
-        | awk 'BEGIN{FS=OFS="\t"}
-               !seen[$1]++' \
+        | awk 'BEGIN{FS=OFS="\t"} !seen[$1]++' \
         > "$matched_tsv"
     then
         echo "ERROR: Failed while recalculating overlaps for sample: $sample_name" >&2
         rm -f "$matched_tsv" "$tmp_out"
         return 1
     fi
-    # 6. Build the final per-sample output by walking through complete consensus bed file.
+
     if ! {
         printf "peak\tsample\tchrom\tstart\tend\tpileup_start\tpileup_end\tscore\tcoverage\tfire_coverage\tactuation\tcoverage_H1\tfire_coverage_H1\tcoverage_H2\tfire_coverage_H2\n"
 
@@ -323,12 +314,12 @@ sample_to_consensus_bedtools() {
             'BEGIN {
                 FS=OFS="\t"
             }
-            # first input file: winners from the overlap/ranking stage, score each row by consensus peak id.
+
             FILENAME == ARGV[1] {
                 matched[$1] = $0
                 next
             }
-            # second input file: consensus.intervals.bed
+
             {
                 consensus_chrom = $1
                 consensus_start = $2
@@ -336,7 +327,6 @@ sample_to_consensus_bedtools() {
                 peak_id = $4
 
                 if (peak_id in matched) {
-
                     split(matched[peak_id], x, "\t")
 
                     print peak_id, \
@@ -354,9 +344,7 @@ sample_to_consensus_bedtools() {
                           x[10], \
                           x[11], \
                           x[12]
-
                 } else {
-            # if no pileup interval olap this consensus peak, preserve consensus coordinates and NA entries. 
                     print peak_id, \
                           sample, \
                           consensus_chrom, \
@@ -376,14 +364,13 @@ sample_to_consensus_bedtools() {
             }' \
             "$matched_tsv" \
             "$consensus_bed"
-
     } > "$tmp_out"
     then
         echo "ERROR: Failed while constructing final output for sample: $sample_name" >&2
         rm -f "$matched_tsv" "$tmp_out"
         return 1
     fi
-    # Only expose the final output after every preceding step succeeds.
+
     if ! mv "$tmp_out" "$out_tsv"; then
         echo "ERROR: Failed to finalize output for sample: $sample_name" >&2
         rm -f "$matched_tsv" "$tmp_out"
@@ -393,7 +380,6 @@ sample_to_consensus_bedtools() {
     rm -f "$matched_tsv"
 }
 
-
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [[ "$#" -ne 4 ]]; then
         echo "Usage: $0 <sample_file.bed.gz> <sample_name> <consensus_bed> <out_tsv>" >&2
@@ -402,6 +388,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
     sample_to_consensus_bedtools "$1" "$2" "$3" "$4"
 fi
+
 EOF
 
     chmod +x "$script_path"
