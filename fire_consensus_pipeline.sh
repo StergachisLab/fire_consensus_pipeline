@@ -101,7 +101,16 @@ Final per-sample outputs:
   samples_recalc_actuation/<sample>.actuation.tsv
 
 Columns:
-  peak    sample    chrom    start    end    score    coverage    fire_coverage    actuation    coverage_H1    fire_coverage_H1    coverage_H2    fire_coverage_H2
+  peak    sample    chrom    start    end    pileup_start    pileup_end    score    coverage    fire_coverage    actuation    coverage_H1    fire_coverage_H1    coverage_H2    fire_coverage_H2
+
+Coordinate definitions:
+  chrom, start, end
+      Coordinates of the consensus peak.
+
+  pileup_start, pileup_end
+      Coordinates of the selected pileup interval used for recalculation.
+      These fields are NA when the consensus peak has no overlapping
+      pileup interval for the sample.
 
 Selection of best overlap per consensus peak:
   For each sample, overlapping rows are ranked and only the top row per peak is kept.
@@ -114,6 +123,10 @@ Selection of best overlap per consensus peak:
     5. coverage descending
 
   After sorting, the first row for each peak is retained.
+
+ Consensus peaks with no overlapping pileup row are retained in the
+  final output with consensus coordinates and NA for all pileup-derived
+  fields.
 
 Expected pileup column order:
   1.  #chrom
@@ -224,8 +237,8 @@ validate_manifest() {
 
 write_sample2consensus_script() {
     local script_path="$1"
-    
-  cat > "$script_path" <<'EOF'
+
+    cat > "$script_path" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -235,90 +248,162 @@ sample_to_consensus_bedtools() {
     local consensus_bed="$3"
     local out_tsv="$4"
 
-    {
-      printf "peak\tsample\tchrom\tstart\tend\tscore\tcoverage\tfire_coverage\tactuation\tcoverage_H1\tfire_coverage_H1\tcoverage_H2\tfire_coverage_H2\n"
+    local matched_tsv
+    local tmp_out
 
-      gzip -dc "$sample_file" \
-      | awk 'BEGIN{FS=OFS="\t"}
-             NR==1 && $1 ~ /^#/ {next}
-             {
-               # Expected pileup columns:
-               # 1  chrom
-               # 2  start
-               # 3  end
-               # 4  coverage
-               # 5  fire_coverage
-               # 6  score
-               # 7  nuc_coverage
-               # 8  msp_coverage
-               # 9  coverage_H1
-               # 10 fire_coverage_H1
-               # 11 score_H1
-               # 12 nuc_coverage_H1
-               # 13 msp_coverage_H1
-               # 14 coverage_H2
-               # 15 fire_coverage_H2
-               # 16 score_H2
-               # 17 nuc_coverage_H2
-               # 18 msp_coverage_H2
-               # 19 is_local_max
-               # 20 FDR
-               # 21 log_FDR
-               print $1,$2,$3,$4,$5,$6,$9,$10,$14,$15
-             }' \
-      | bedtools intersect -a "$consensus_bed" -b - -wa -wb -sorted \
-      | awk 'BEGIN{FS=OFS="\t"}
-             {
-               # A = consensus.intervals.bed
-               # 1  chr
-               # 2  start
-               # 3  end
-               # 4  peak_id
-               #
-               # B = selected pileup columns
-               # 5  chrom
-               # 6  start
-               # 7  end
-               # 8  coverage
-               # 9  fire_coverage
-               # 10 score
-               # 11 coverage_H1
-               # 12 fire_coverage_H1
-               # 13 coverage_H2
-               # 14 fire_coverage_H2
+    matched_tsv=$(mktemp "${out_tsv}.matched.XXXXXX")
+    tmp_out=$(mktemp "${out_tsv}.tmp.XXXXXX")
 
-               peak_id = $4
-               chrom = $5
-               start = $6
-               end = $7
-               cov = $8
-               fire = $9
-               score = $10
-               cov_h1 = $11
-               fire_h1 = $12
-               cov_h2 = $13
-               fire_h2 = $14
-               act = (cov > 0 ? fire / cov : "NA")
+    # 1. Select the pileup columns needed for recalculation.
+    if ! gzip -dc "$sample_file" \
+        | awk 'BEGIN{FS=OFS="\t"}
+               NR==1 && $1 ~ /^#/ {next}
+               {
+                   print $1,$2,$3,$4,$5,$6,$9,$10,$14,$15
+               }' \
+        # 2. Intersect consensus intervals against the sample pileup.
+        | bedtools intersect \
+            -a "$consensus_bed" \
+            -b - \
+            -wa -wb -sorted \
+        # 3. Reformat each overlap into the internal ranking representation.
+        | awk 'BEGIN{FS=OFS="\t"}
+               {
+                   peak_id = $4
 
-               print peak_id, chrom, start, end, score, cov, fire, act, cov_h1, fire_h1, cov_h2, fire_h2
-             }' \
-      | sort -t $'\t' -k1,1 -k5,5nr -k8,8gr -k7,7nr -k6,6nr \
-      | awk -v sample="$sample_name" 'BEGIN{FS=OFS="\t"}
-             !seen[$1]++ {
-               print $1, sample, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
-             }'
-    } > "$out_tsv"
+                   pileup_chrom = $5
+                   pileup_start = $6
+                   pileup_end = $7
+
+                   cov = $8
+                   fire = $9
+                   score = $10
+
+                   cov_h1 = $11
+                   fire_h1 = $12
+                   cov_h2 = $13
+                   fire_h2 = $14
+
+                   act = (cov > 0 ? fire / cov : "NA")
+
+                   print peak_id, \
+                         pileup_chrom, \
+                         pileup_start, \
+                         pileup_end, \
+                         score, \
+                         cov, \
+                         fire, \
+                         act, \
+                         cov_h1, \
+                         fire_h1, \
+                         cov_h2, \
+                         fire_h2
+               }' \
+        # 4. Rank candidate pileup rows within each consensus peak.
+        | sort -t $'\t' \
+            -k1,1 \
+            -k5,5nr \
+            -k8,8gr \
+            -k7,7nr \
+            -k6,6nr \
+        # 5. Keep only the highest-ranked pileup row for each consensus peak.
+        | awk 'BEGIN{FS=OFS="\t"}
+               !seen[$1]++' \
+        > "$matched_tsv"
+    then
+        echo "ERROR: Failed while recalculating overlaps for sample: $sample_name" >&2
+        rm -f "$matched_tsv" "$tmp_out"
+        return 1
+    fi
+    # 6. Build the final per-sample output by walking through complete consensus bed file.
+    if ! {
+        printf "peak\tsample\tchrom\tstart\tend\tpileup_start\tpileup_end\tscore\tcoverage\tfire_coverage\tactuation\tcoverage_H1\tfire_coverage_H1\tcoverage_H2\tfire_coverage_H2\n"
+
+        awk -v sample="$sample_name" \
+            'BEGIN {
+                FS=OFS="\t"
+            }
+            # first input file: winners from the overlap/ranking stage, score each row by consensus peak id.
+            FILENAME == ARGV[1] {
+                matched[$1] = $0
+                next
+            }
+            # second input file: consensus.intervals.bed
+            {
+                consensus_chrom = $1
+                consensus_start = $2
+                consensus_end = $3
+                peak_id = $4
+
+                if (peak_id in matched) {
+
+                    split(matched[peak_id], x, "\t")
+
+                    print peak_id, \
+                          sample, \
+                          consensus_chrom, \
+                          consensus_start, \
+                          consensus_end, \
+                          x[3], \
+                          x[4], \
+                          x[5], \
+                          x[6], \
+                          x[7], \
+                          x[8], \
+                          x[9], \
+                          x[10], \
+                          x[11], \
+                          x[12]
+
+                } else {
+            # if no pileup interval olap this consensus peak, preserve consensus coordinates and NA entries. 
+                    print peak_id, \
+                          sample, \
+                          consensus_chrom, \
+                          consensus_start, \
+                          consensus_end, \
+                          "NA", \
+                          "NA", \
+                          "NA", \
+                          "NA", \
+                          "NA", \
+                          "NA", \
+                          "NA", \
+                          "NA", \
+                          "NA", \
+                          "NA"
+                }
+            }' \
+            "$matched_tsv" \
+            "$consensus_bed"
+
+    } > "$tmp_out"
+    then
+        echo "ERROR: Failed while constructing final output for sample: $sample_name" >&2
+        rm -f "$matched_tsv" "$tmp_out"
+        return 1
+    fi
+    # Only expose the final output after every preceding step succeeds.
+    if ! mv "$tmp_out" "$out_tsv"; then
+        echo "ERROR: Failed to finalize output for sample: $sample_name" >&2
+        rm -f "$matched_tsv" "$tmp_out"
+        return 1
+    fi
+
+    rm -f "$matched_tsv"
 }
 
+
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  if [[ "$#" -ne 4 ]]; then
-    echo "Usage: $0 <sample_file.bed.gz> <sample_name> <consensus_bed> <out_tsv>" >&2
-    exit 1
-  fi
-  sample_to_consensus_bedtools "$1" "$2" "$3" "$4"
+    if [[ "$#" -ne 4 ]]; then
+        echo "Usage: $0 <sample_file.bed.gz> <sample_name> <consensus_bed> <out_tsv>" >&2
+        exit 1
+    fi
+
+    sample_to_consensus_bedtools "$1" "$2" "$3" "$4"
 fi
 EOF
-    
+
     chmod +x "$script_path"
 }
 
