@@ -251,7 +251,8 @@ chr1_2000_2200	SAMPLE_A	chr1	2015	2194	17	80	3	0.0375	35	1	45	2
 chr2_500_800	SAMPLE_A	chr2	520	790	25	60	9	0.15	28	4	32	5
 ```
 
-We recommend merging all samples of interest after the script is done running for any comparative downstream analysis. 
+After all per-sample jobs have completed, we recommend merging all samples of interest for any comparative downstream analysis. 
+
 
 ```
 awk 'FNR == 1 && NR != 1 {next} {print}' \
