@@ -251,7 +251,7 @@ chr1_2000_2200	SAMPLE_A	chr1	2015	2194	17	80	3	0.0375	35	1	45	2
 chr2_500_800	SAMPLE_A	chr2	520	790	25	60	9	0.15	28	4	32	5
 ```
 
-After all per-sample jobs have completed, every sample should have exactly the same number of data rows as consensus.intervals.bed, including unmatched peaks represented by NA. 
+After all per-sample jobs have completed, every sample should have exactly the same number of data rows as `consensus.intervals.bed`, including unmatched peaks represented by NA. 
 We recommend merging all per-sample files for any comparative downstream analysis. 
 
 
