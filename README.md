@@ -1,3 +1,4 @@
+[![GitHub Release](https://img.shields.io/github/v/release/StergachisLab/fire_consensus_pipeline)](https://github.com/StergachisLab/fire_consensus_pipeline/releases/latest)
 ![Downloads](https://img.shields.io/github/downloads/StergachisLab/fire_consensus_pipeline/total)
 ![Last Commit](https://img.shields.io/github/last-commit/StergachisLab/fire_consensus_pipeline)
 ![Reproducible](https://img.shields.io/badge/reproducible-yes-brightgreen.svg)
