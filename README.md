@@ -246,10 +246,9 @@ samples_recalc_actuation/<sample>.actuation.tsv
 ## Example Output File
 
 ```tsv
-peak	sample	chrom	start	end	score	coverage	fire_coverage	actuation	coverage_H1	fire_coverage_H1	coverage_H2	fire_coverage_H2
-chr1_1000_1200	SAMPLE_A	chr1	1012	1188	42	100	12	0.12	48	6	52	6
-chr1_2000_2200	SAMPLE_A	chr1	2015	2194	17	80	3	0.0375	35	1	45	2
-chr2_500_800	SAMPLE_A	chr2	520	790	25	60	9	0.15	28	4	32	5
+peak    sample  chrom   start   end     pileup_start    pileup_end      score   coverage       fire_coverage    actuation     coverage_H1     fire_coverage_H1        coverage_H2     fire_coverage_H2
+chr1_3472_3704  PS0389 chr1    3472    3704    3564    3570    22.28687        13      4      0.307692 6       3       5     1
+chr1_7918_8155  PS0389 chr1    7918    8155    7905    7920    -1.0    23      1       0.0434783       7       0       11     1
 ```
 
 After all per-sample jobs have completed, every sample should have exactly the same number of data rows as `consensus.intervals.bed`, including unmatched peaks represented by NA. 
