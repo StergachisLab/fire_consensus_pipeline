@@ -101,7 +101,7 @@ Final per-sample outputs:
   samples_recalc_actuation/<sample>.actuation.tsv
 
 Columns:
-  peak    sample    chrom    start    end    pileup_start    pileup_end    score    coverage    fire_coverage    actuation    coverage_H1    fire_coverage_H1    coverage_H2    fire_coverage_H2
+  consensus_peak_id    sample    chrom    start    end    pileup_start    pileup_end    score    coverage    fire_coverage    actuation    coverage_H1    fire_coverage_H1    coverage_H2    fire_coverage_H2
 
 Coordinate definitions:
   chrom, start, end
@@ -308,7 +308,7 @@ sample_to_consensus_bedtools() {
     fi
 
     if ! {
-        printf "peak\tsample\tchrom\tstart\tend\tpileup_start\tpileup_end\tscore\tcoverage\tfire_coverage\tactuation\tcoverage_H1\tfire_coverage_H1\tcoverage_H2\tfire_coverage_H2\n"
+        printf "consensus_peak_id\tsample\tchrom\tstart\tend\tpileup_start\tpileup_end\tscore\tcoverage\tfire_coverage\tactuation\tcoverage_H1\tfire_coverage_H1\tcoverage_H2\tfire_coverage_H2\n"
 
         awk -v sample="$sample_name" \
             'BEGIN {
