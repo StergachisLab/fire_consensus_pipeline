@@ -457,7 +457,7 @@ reduce_peaks_stage() {
         (
             out="$REDUCED_DIR/${sample}.peaks.reduced.tsv"
             gzip -cd -- "$peaks" \
-            | awk -v s="$sample" 'BEGIN{OFS="\t"} !/^#/ && NF>=6 {print $1,$2,$3,$6,s}' \
+            | awk -v s="$sample" 'BEGIN{OFS="\t"} !/^#/ && NF>=6 {print $1,$2,$3,s"_"$1}' \
             > "$out"
         ) &
         while [[ "$(jobs -r | wc -l)" -ge "$JOBS" ]]; do
