@@ -257,9 +257,10 @@ sample_to_consensus_bedtools() {
     if ! gzip -dc "$sample_file" \
         | awk 'BEGIN{FS=OFS="\t"}
                NR==1 && $1 ~ /^#/ {next}
-               {
+               NF >= 15 {
                    print $1,$2,$3,$4,$5,$6,$9,$10,$14,$15
                }' \
+        | LC_ALL=C sort -t $'\t' -k1,1V -k2,2n -k3,3n \
         | bedtools intersect \
             -a "$consensus_bed" \
             -b - \
@@ -457,7 +458,7 @@ reduce_peaks_stage() {
         (
             out="$REDUCED_DIR/${sample}.peaks.reduced.tsv"
             gzip -cd -- "$peaks" \
-            | awk -v s="$sample" 'BEGIN{OFS="\t"} !/^#/ && NF>=6 {print $1,$2,$3,s"_"$1}' \
+            | awk -v s="$sample" 'BEGIN{OFS="	"} !/^#/ && NF>=3 {print $1,$2,$3,s"_"$1}' \
             > "$out"
         ) &
         while [[ "$(jobs -r | wc -l)" -ge "$JOBS" ]]; do
@@ -482,10 +483,10 @@ consensus_stage() {
     
     log "Building merged 4-column BED"
     if [[ "$DRY_RUN" == "1" ]]; then
-        echo "[DRY-RUN] cat $REDUCED_DIR/*.peaks.reduced.tsv | awk ... | bgzip -@ $JOBS > $MERGED_BED_GZ"
+        echo "[DRY-RUN] cat $REDUCED_DIR/*.peaks.reduced.tsv | sort by chrom/start/end | bgzip -@ $JOBS > $MERGED_BED_GZ"
     else
         cat "$REDUCED_DIR"/*.peaks.reduced.tsv \
-        | awk 'BEGIN{OFS="\t"} {print $1,$2,$3,$4"_"$1}' \
+        | LC_ALL=C sort -t $'	' -k1,1V -k2,2n -k3,3n \
         | bgzip -@ "$JOBS" > "$MERGED_BED_GZ"
     fi
     
@@ -506,14 +507,16 @@ consensus_stage() {
     if [[ "$DRY_RUN" == "1" ]]; then
         echo "[DRY-RUN] awk to create $CONSENSUS_BED and $CONSENSUS_PEAK_IDS"
     else
-        awk 'BEGIN{OFS="\t"}
+        awk 'BEGIN{OFS="	"}
       NR==1 {next}
       {
         peak_id = $1 "_" $2 "_" $3
         print $1, $2, $3, peak_id
-        }' "$OUTPUT_PEAKS" > "$CONSENSUS_BED"
-        
-        awk 'BEGIN{OFS="\t"} NR>1 {print $1"_"$2"_"$3}' "$OUTPUT_PEAKS" > "$CONSENSUS_PEAK_IDS"
+      }' "$OUTPUT_PEAKS" \
+        | LC_ALL=C sort -t $'	' -k1,1V -k2,2n -k3,3n \
+        > "$CONSENSUS_BED"
+
+        cut -f4 "$CONSENSUS_BED" > "$CONSENSUS_PEAK_IDS"
     fi
     
     if [[ "$KEEP_TEMP" != "1" ]]; then
